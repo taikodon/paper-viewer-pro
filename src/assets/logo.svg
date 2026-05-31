@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="docGrad" x1="22" y1="14" x2="22" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="bubbleGrad" x1="58" y1="60" x2="110" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <filter id="docShadow" x="-10%" y="-5%" width="130%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+    <filter id="bubbleShadow" x="-10%" y="-10%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="120" height="120" rx="26" fill="url(#bgGrad)"/>
+
+  <!-- Subtle inner glow -->
+  <rect width="120" height="120" rx="26" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+
+  <!-- Document body -->
+  <rect x="16" y="12" width="56" height="72" rx="5" fill="url(#docGrad)" filter="url(#docShadow)"/>
+
+  <!-- Folded corner (dog-ear) -->
+  <path d="M56 12 L72 28 H58 Q56 28 56 26 Z" fill="#cbd5e1"/>
+  <path d="M56 12 L72 28 L56 28 Z" fill="#e2e8f0"/>
+
+  <!-- "PDF" label on document -->
+  <rect x="20" y="16" width="22" height="7" rx="2" fill="#ef4444" opacity="0.9"/>
+  <text x="31" y="22.5" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="5.5" fill="white" text-anchor="middle" letter-spacing="0.3">PDF</text>
+
+  <!-- Text lines simulating academic text -->
+  <rect x="20" y="30" width="34" height="2.5" rx="1.2" fill="#94a3b8" opacity="0.7"/>
+  <rect x="20" y="36" width="38" height="2.5" rx="1.2" fill="#94a3b8" opacity="0.6"/>
+  <rect x="20" y="42" width="30" height="2.5" rx="1.2" fill="#94a3b8" opacity="0.6"/>
+  <rect x="20" y="48" width="36" height="2.5" rx="1.2" fill="#94a3b8" opacity="0.5"/>
+  <rect x="20" y="54" width="28" height="2.5" rx="1.2" fill="#94a3b8" opacity="0.5"/>
+  <rect x="20" y="60" width="34" height="2.5" rx="1.2" fill="#94a3b8" opacity="0.45"/>
+  <rect x="20" y="66" width="22" height="2.5" rx="1.2" fill="#94a3b8" opacity="0.4"/>
+
+  <!-- Translation bubble -->
+  <rect x="55" y="58" width="52" height="48" rx="12" fill="url(#bubbleGrad)" filter="url(#bubbleShadow)"/>
+  <!-- Bubble tail pointing to document -->
+  <path d="M62 58 L55 52 L70 58 Z" fill="#06b6d4"/>
+
+  <!-- Japanese character 「あ」 (representing translation) -->
+  <text x="81" y="88" font-family="'Noto Sans JP', 'Yu Gothic', 'Hiragino Sans', sans-serif" font-weight="700" font-size="28" fill="white" text-anchor="middle" opacity="0.95">あ</text>
+
+  <!-- Translation arrows between EN and JP -->
+  <text x="68" y="71" font-family="system-ui, sans-serif" font-weight="600" font-size="7.5" fill="rgba(255,255,255,0.75)" text-anchor="middle">EN</text>
+  <!-- Arrow -->
+  <path d="M73 68 L78 68" stroke="rgba(255,255,255,0.65)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M76.5 66 L78 68 L76.5 70" stroke="rgba(255,255,255,0.65)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <text x="85" y="71" font-family="system-ui, sans-serif" font-weight="600" font-size="7.5" fill="rgba(255,255,255,0.75)" text-anchor="middle">JP</text>
+
+  <!-- AI sparkle (top-right) -->
+  <g transform="translate(88, 18)">
+    <!-- 4-point star -->
+    <path d="M0 -9 L2 -2 L9 0 L2 2 L0 9 L-2 2 L-9 0 L-2 -2 Z" fill="#fbbf24"/>
+    <!-- Small sparkles -->
+    <circle cx="10" cy="-6" r="1.8" fill="#fbbf24" opacity="0.7"/>
+    <circle cx="-8" cy="8" r="1.2" fill="#fbbf24" opacity="0.5"/>
+  </g>
+</svg>

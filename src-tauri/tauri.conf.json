@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Paper Viewer Pro",
+  "productName": "Yomeru",
   "version": "0.1.0",
-  "identifier": "com.paperviewer.pro",
+  "identifier": "com.yomeru.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Paper Viewer Pro",
+        "title": "Yomeru",
         "width": 1280,
         "height": 800,
         "minWidth": 900,

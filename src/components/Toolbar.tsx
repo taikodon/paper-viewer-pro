@@ -9,6 +9,7 @@ import {
   Maximize2,
   FolderOpen,
 } from 'lucide-react';
+import logoSvg from '../assets/logo.svg';
 
 interface ToolbarProps {
   currentPage: number;
@@ -54,6 +55,12 @@ export function Toolbar({
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-white border-b border-gray-200 text-sm flex-shrink-0">
+      {/* Logo */}
+      <img src={logoSvg} alt="logo" className="w-7 h-7 rounded-lg flex-shrink-0" />
+      <span className="font-semibold text-gray-800 text-sm tracking-tight mr-1">Yomeru</span>
+
+      <div className="w-px h-5 bg-gray-200" />
+
       {/* Open file */}
       <button
         onClick={onOpenFile}
