@@ -47,6 +47,21 @@
 
 ---
 
+## ダウンロード（インストール不要でそのまま使う）
+
+[**Releases ページ**](https://github.com/taikodon/yomeru/releases) から最新ビルドをダウンロードできます。
+
+| OS | ダウンロードするファイル | 手順 |
+|----|--------------------------|------|
+| **Windows** | `Yomeru_x.x.x_x64_en-US.msi` | ダウンロードして実行、ウィザードに従いインストール |
+| **macOS** | `Yomeru_x.x.x_universal.dmg` | ダウンロードして開き、Applications にドラッグ |
+| **Linux (Ubuntu/Debian)** | `yomeru_x.x.x_amd64.deb` | `sudo dpkg -i yomeru_*.deb` |
+| **Linux (その他)** | `yomeru_x.x.x_amd64.AppImage` | 実行権限を付与して直接起動 (`chmod +x && ./yomeru.AppImage`) |
+
+> `latest` タグのリリースは main ブランチの最新コードから自動生成されたビルドです。安定版を使いたい場合は `v` から始まるタグ付きリリースをお選びください。
+
+---
+
 ## 動作環境
 
 - Windows 10/11 / macOS 12+ / Linux
