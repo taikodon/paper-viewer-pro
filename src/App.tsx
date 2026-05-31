@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { getCurrentWindow, PhysicalSize, PhysicalPosition } from '@tauri-apps/api/window';
+
+const isTauri = () => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 import { AppProvider, useApp } from './contexts/AppContext';
 import { Sidebar } from './components/Sidebar';
 import { Toolbar } from './components/Toolbar';
@@ -58,36 +60,42 @@ function PdfApp() {
 
   // Initialize: load API key and last paper
   useEffect(() => {
+    if (!isTauri()) return;
     (async () => {
-      const key = await storeService.getApiKey();
-      setApiKey(key);
+      try {
+        const key = await storeService.getApiKey();
+        setApiKey(key);
 
-      // Restore window position/size
-      const win = getCurrentWindow();
-      const w = await storeService.get('windowWidth');
-      const h = await storeService.get('windowHeight');
-      if (w > 0 && h > 0) {
-        await win.setSize(new PhysicalSize(w, h)).catch(() => {});
-      }
-      const x = await storeService.get('windowX');
-      const y = await storeService.get('windowY');
-      if (x !== 0 || y !== 0) {
-        await win.setPosition(new PhysicalPosition(x, y)).catch(() => {});
-      }
-
-      // Restore last paper
-      const lastId = await storeService.getLastPaperId();
-      if (lastId) {
-        const paper = await dbService.getPaper(lastId);
-        if (paper) {
-          await openPaperByPath(paper.file_path, paper.last_opened_page, paper.last_zoom_level, paper);
+        // Restore window position/size
+        const win = getCurrentWindow();
+        const w = await storeService.get('windowWidth');
+        const h = await storeService.get('windowHeight');
+        if (w > 0 && h > 0) {
+          await win.setSize(new PhysicalSize(w, h)).catch(() => {});
         }
+        const x = await storeService.get('windowX');
+        const y = await storeService.get('windowY');
+        if (x !== 0 || y !== 0) {
+          await win.setPosition(new PhysicalPosition(x, y)).catch(() => {});
+        }
+
+        // Restore last paper
+        const lastId = await storeService.getLastPaperId();
+        if (lastId) {
+          const paper = await dbService.getPaper(lastId);
+          if (paper) {
+            await openPaperByPath(paper.file_path, paper.last_opened_page, paper.last_zoom_level, paper);
+          }
+        }
+      } catch (e) {
+        console.warn('Init error:', e);
       }
     })();
   }, []);
 
   // Persist window size
   useEffect(() => {
+    if (!isTauri()) return;
     const win = getCurrentWindow();
     let t: ReturnType<typeof setTimeout>;
     const unsubPromise = win.onResized(async () => {
@@ -128,6 +136,7 @@ function PdfApp() {
   }, [fileData]);
 
   const handleOpenFile = useCallback(async () => {
+    if (!isTauri()) return;
     const selected = await open({
       multiple: false,
       filters: [{ name: 'PDF', extensions: ['pdf'] }],

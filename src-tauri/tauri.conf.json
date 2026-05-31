@@ -26,12 +26,6 @@
       "csp": null
     }
   },
-  "plugins": {
-    "store": {
-      "autoSave": 300
-    },
-    "sql": {}
-  },
   "bundle": {
     "active": true,
     "targets": "all",
