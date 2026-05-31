@@ -112,7 +112,7 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
 
       {hasFile && (
         <div className="relative shadow-2xl">
-          <canvas ref={canvasRef} className="block" />
+          <canvas ref={canvasRef} className="block" style={{ pointerEvents: 'none' }} />
           <div
             ref={textLayerRef}
             className="absolute top-0 left-0 textLayer"
