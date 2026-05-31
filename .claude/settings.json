@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git add -u && git add -- src/ public/ src-tauri/ index.html README.md CLAUDE.md .claude/ 2>/dev/null; git diff --cached --quiet || git commit -m \"chore: auto-commit via Claude Code [$(date '+%Y-%m-%d %H:%M')]\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
