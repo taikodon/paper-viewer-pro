@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { getCurrentWindow, PhysicalSize, PhysicalPosition } from '@tauri-apps/api/window';
 
@@ -137,9 +138,11 @@ function PdfApp() {
 
   const handleOpenFile = useCallback(async () => {
     if (!isTauri()) return;
+    const defaultPath = await invoke<string>('get_default_open_path').catch(() => '');
     const selected = await open({
       multiple: false,
       filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      defaultPath: defaultPath || undefined,
     });
     if (!selected || typeof selected !== 'string') return;
     await openPaperByPath(selected);

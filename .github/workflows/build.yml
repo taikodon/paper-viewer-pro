@@ -1,0 +1,71 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            label: Linux
+            args: ''
+          - os: windows-latest
+            label: Windows
+            args: ''
+          - os: macos-latest
+            label: macOS
+            args: '--target universal-apple-darwin'
+
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.label }})
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - run: npm install
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
+          releaseName: ${{ startsWith(github.ref, 'refs/tags/') && format('Yomeru {0}', github.ref_name) || 'Yomeru — 最新ビルド' }}
+          releaseBody: |
+            ${{ startsWith(github.ref, 'refs/tags/') && '## インストール方法' || '> ⚠️ main ブランチの最新コードから自動生成されたビルドです。' }}
+
+            | OS | ファイル |
+            |---|---|
+            | Windows | `.msi` または `_en-US.msi` |
+            | macOS | `.dmg` |
+            | Linux | `.deb`（Ubuntu）/ `.AppImage`（その他） |
+          releaseDraft: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          args: ${{ matrix.args }}
