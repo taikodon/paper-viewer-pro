@@ -186,6 +186,8 @@ function PdfApp() {
             isLoading={isLoading}
             hasFile={!!fileData}
             currentPage={viewerPage}
+            totalPages={totalPages}
+            goToPage={goToPage}
           />
         </div>
 

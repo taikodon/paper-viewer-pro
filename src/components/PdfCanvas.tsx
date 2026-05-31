@@ -12,9 +12,11 @@ interface PdfCanvasProps {
   isLoading: boolean;
   hasFile: boolean;
   currentPage: number;
+  totalPages: number;
+  goToPage: (page: number) => void;
 }
 
-export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, currentPage }: PdfCanvasProps) {
+export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, currentPage, totalPages, goToPage }: PdfCanvasProps) {
   const {
     currentPaper,
     selection, setSelection,
@@ -26,6 +28,23 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
   } = useApp();
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const scrollable = el.scrollHeight > el.clientHeight + 4;
+      const atBottom = !scrollable || el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+      const atTop = !scrollable || el.scrollTop <= 4;
+      if (e.deltaY > 0 && atBottom && currentPage < totalPages) {
+        el.scrollTop = 0;
+        goToPage(currentPage + 1);
+      } else if (e.deltaY < 0 && atTop && currentPage > 1) {
+        goToPage(currentPage - 1);
+      }
+    },
+    [currentPage, totalPages, goToPage]
+  );
 
   const handleSelect = useCallback(
     async (info: SelectionInfo) => {
@@ -76,6 +95,7 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
       className="relative flex-1 overflow-auto bg-gray-400 flex flex-col items-center py-6 pb-8"
       onMouseUp={handleMouseUp}
       onClick={handleContainerClick}
+      onWheel={handleWheel}
     >
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-400/60 z-10">
@@ -95,7 +115,7 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
           <canvas ref={canvasRef} className="block" />
           <div
             ref={textLayerRef}
-            className="absolute top-0 left-0 pdf-text-layer select-text"
+            className="absolute top-0 left-0 textLayer"
           />
           {selection && (
             <div className="translation-popup">
