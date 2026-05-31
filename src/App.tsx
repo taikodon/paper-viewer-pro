@@ -187,7 +187,9 @@ function PdfApp() {
             hasFile={!!fileData}
             currentPage={viewerPage}
             totalPages={totalPages}
+            zoom={zoom}
             goToPage={goToPage}
+            changeZoom={changeZoom}
           />
         </div>
 

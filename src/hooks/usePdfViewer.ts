@@ -52,15 +52,15 @@ export function usePdfViewer({ onPageChange }: UsePdfViewerOptions = {}) {
         return;
       }
 
-      // Text layer using pdfjs-dist v4 TextLayer class
+      // Text layer — pdfjs v4 sizes the container via calc(var(--scale-factor) * pageWidth)
+      // so --scale-factor MUST be set before creating TextLayer, otherwise width/height = 0
       const textLayer = textLayerRef.current;
       textLayer.innerHTML = '';
-      textLayer.style.width = `${viewport.width}px`;
-      textLayer.style.height = `${viewport.height}px`;
+      textLayer.style.setProperty('--scale-factor', String(scale));
 
       const textContent = await page.getTextContent();
       const tl = new pdfjs.TextLayer({
-        textContentSource: textContent as unknown as ReadableStream,
+        textContentSource: textContent,
         container: textLayer,
         viewport,
       });

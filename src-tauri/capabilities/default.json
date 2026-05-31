@@ -29,6 +29,7 @@
     "fs:allow-read-dir",
     "fs:allow-exists",
     "fs:scope-home-recursive",
-    "fs:scope-applocaldata-recursive"
+    "fs:scope-applocaldata-recursive",
+    { "identifier": "fs:scope", "allow": [{ "path": "/mnt/**" }] }
   ]
 }

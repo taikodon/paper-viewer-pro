@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { TranslationPopup } from './TranslationPopup';
 import { useApp } from '../contexts/AppContext';
 import { useTextSelection } from '../hooks/useTextSelection';
@@ -13,10 +13,12 @@ interface PdfCanvasProps {
   hasFile: boolean;
   currentPage: number;
   totalPages: number;
+  zoom: number;
   goToPage: (page: number) => void;
+  changeZoom: (zoom: number) => void;
 }
 
-export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, currentPage, totalPages, goToPage }: PdfCanvasProps) {
+export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, currentPage, totalPages, zoom, goToPage, changeZoom }: PdfCanvasProps) {
   const {
     currentPaper,
     selection, setSelection,
@@ -29,8 +31,28 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Native (non-passive) listener so preventDefault() works for Ctrl+wheel
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) e.preventDefault();
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+  const changeZoomRef = useRef(changeZoom);
+  changeZoomRef.current = changeZoom;
+
   const handleWheel = useCallback(
     (e: React.WheelEvent<HTMLDivElement>) => {
+      if (e.ctrlKey) {
+        changeZoomRef.current(zoomRef.current + (e.deltaY > 0 ? -0.1 : 0.1));
+        return;
+      }
       const el = containerRef.current;
       if (!el) return;
       const scrollable = el.scrollHeight > el.clientHeight + 4;
