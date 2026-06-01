@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Key, Save, Check } from 'lucide-react';
+import { Key, Save, Check, AlertCircle } from 'lucide-react';
 import { storeService } from '../services/store';
 import { useApp } from '../contexts/AppContext';
 
@@ -7,16 +7,23 @@ export function SettingsPanel() {
   const { apiKey, setApiKey } = useApp();
   const [inputKey, setInputKey] = useState('');
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setInputKey(apiKey);
   }, [apiKey]);
 
   async function handleSave() {
-    await storeService.setApiKey(inputKey);
-    setApiKey(inputKey);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setError(null);
+    try {
+      await storeService.setApiKey(inputKey);
+      setApiKey(inputKey);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      console.error('API key save error:', e);
+      setError('保存に失敗しました。再試行してください。');
+    }
   }
 
   return (
@@ -40,6 +47,13 @@ export function SettingsPanel() {
             Google AI Studio で無料取得できます。ローカルに安全に保存されます。
           </p>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-1.5 text-xs text-red-600">
+            <AlertCircle size={13} />
+            {error}
+          </div>
+        )}
 
         <button
           onClick={handleSave}

@@ -14,7 +14,6 @@ async function getStore(): Promise<Store> {
         lastPaperId: null,
         geminiApiKey: '',
       },
-      autoSave: true,
     });
   }
   return storeInstance;
@@ -39,6 +38,7 @@ export const storeService = {
   async set<K extends keyof AppState>(key: K, value: AppState[K]): Promise<void> {
     const store = await getStore();
     await store.set(key, value);
+    await store.save();
   },
 
   async getApiKey(): Promise<string> {
