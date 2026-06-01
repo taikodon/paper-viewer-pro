@@ -65,6 +65,22 @@ html, body, #root {
   background: rgba(59, 130, 246, 0.35);
 }
 
+/* endOfContent: sits below the text layer normally; covers it during selection
+   to prevent the cursor from hitting blank space and jumping the selection */
+.textLayer .endOfContent {
+  display: block;
+  position: absolute;
+  inset: 100% 0 0;
+  z-index: 0;
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.textLayer.selecting .endOfContent {
+  top: 0;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

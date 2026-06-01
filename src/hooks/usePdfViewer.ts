@@ -7,6 +7,95 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
+// --- Text selection enhancement ---
+
+// Holds all active textLayer elements for global pointerup cleanup
+const activeTextLayers = new Set<HTMLElement>();
+let globalPointerUpBound = false;
+
+function setupGlobalPointerUp() {
+  if (globalPointerUpBound) return;
+  globalPointerUpBound = true;
+  document.addEventListener('pointerup', () => {
+    for (const layer of activeTextLayers) {
+      layer.classList.remove('selecting');
+    }
+  });
+  window.addEventListener('blur', () => {
+    for (const layer of activeTextLayers) {
+      layer.classList.remove('selecting');
+    }
+  });
+}
+
+function addEndOfContent(textLayerEl: HTMLElement): void {
+  const endDiv = document.createElement('div');
+  endDiv.className = 'endOfContent';
+  textLayerEl.appendChild(endDiv);
+  textLayerEl.addEventListener('mousedown', () => {
+    textLayerEl.classList.add('selecting');
+  });
+  activeTextLayers.add(textLayerEl);
+  setupGlobalPointerUp();
+}
+
+// Split each multi-word span into individual word spans so that selection
+// advances one word at a time instead of one full text-run at a time.
+function splitTextLayerSpans(container: HTMLElement): void {
+  const measureCanvas = document.createElement('canvas');
+  const ctx = measureCanvas.getContext('2d');
+  if (!ctx) return;
+
+  const spans = Array.from(container.querySelectorAll<HTMLSpanElement>('span'));
+
+  for (const span of spans) {
+    if (span.getAttribute('role') === 'img') continue;
+    if (span.children.length > 0) continue; // non-leaf
+    const text = span.textContent ?? '';
+    if (!text.includes(' ')) continue;
+
+    const spanStyle = span.style;
+    const baseLeft = parseFloat(spanStyle.left) || 0;
+    const transform = spanStyle.transform;
+
+    // Extract scaleX; skip rotated text (matrix with b != 0)
+    let scaleX = 1;
+    const scaleMatch = transform.match(/scaleX\(([\d.eE+\-]+)\)/);
+    if (scaleMatch) {
+      scaleX = parseFloat(scaleMatch[1]);
+    } else if (/matrix/.test(transform)) {
+      const m = transform.match(/matrix\(([^)]+)\)/);
+      if (m) {
+        const p = m[1].split(/,\s*/).map(Number);
+        if (Math.abs(p[1]) > 0.01) continue; // rotated — skip
+        scaleX = p[0];
+      }
+    }
+
+    const computedStyle = window.getComputedStyle(span);
+    ctx.font = computedStyle.font;
+
+    // Split at spaces, keeping trailing space with the preceding token
+    const tokens = text.split(/(?<= )/);
+    if (tokens.length < 2) continue;
+
+    const fragment = document.createDocumentFragment();
+    let offsetX = 0;
+    for (const token of tokens) {
+      if (!token) continue;
+      const ws = document.createElement('span');
+      ws.textContent = token;
+      ws.style.cssText = spanStyle.cssText;
+      ws.style.left = `${baseLeft + offsetX}px`;
+      offsetX += ctx.measureText(token).width * scaleX;
+      fragment.appendChild(ws);
+    }
+
+    span.parentElement?.insertBefore(fragment, span);
+    span.remove();
+  }
+}
+
 interface UsePdfViewerOptions {
   onPageChange?: (page: number, total: number) => void;
 }
@@ -36,6 +125,7 @@ export function usePdfViewer({ onPageChange }: UsePdfViewerOptions = {}) {
 
       pagesEl.innerHTML = '';
       observerRef.current?.disconnect();
+      activeTextLayers.clear();
 
       const pageVisibility = new Map<number, number>();
       observerRef.current = new IntersectionObserver(
@@ -110,6 +200,9 @@ export function usePdfViewer({ onPageChange }: UsePdfViewerOptions = {}) {
           viewport,
         });
         await tl.render();
+        if (renderGenRef.current !== gen) return;
+        splitTextLayerSpans(textLayerEl);
+        addEndOfContent(textLayerEl);
       }
     },
     [onPageChange]
