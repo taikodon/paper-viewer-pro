@@ -92,6 +92,12 @@ export function PdfCanvas({ containerRef, pagesRef, isLoading, hasFile, zoom, ch
     }, 100);
   }, [apiKey, containerRef, setSelection, setTranslationResult, setIsTranslating]);
 
+  // テキスト選択を解除してポップアップを閉じる。選択状態を残すと mouseup で即再表示される
+  const handleClose = useCallback(() => {
+    window.getSelection()?.removeAllRanges();
+    closePopup();
+  }, [closePopup]);
+
   const handleSave = useCallback(async () => {
     if (!selection || !translationResult || !currentPaper) return;
     const h = await dbService.saveHighlight(
@@ -102,8 +108,8 @@ export function PdfCanvas({ containerRef, pagesRef, isLoading, hasFile, zoom, ch
       selection.pageNumber
     );
     addHighlight(h);
-    closePopup();
-  }, [selection, translationResult, currentPaper, addHighlight, closePopup]);
+    handleClose();
+  }, [selection, translationResult, currentPaper, addHighlight, handleClose]);
 
   const handleContainerClick = useCallback(
     (e: React.MouseEvent) => {
@@ -144,7 +150,7 @@ export function PdfCanvas({ containerRef, pagesRef, isLoading, hasFile, zoom, ch
           selection={selection}
           result={translationResult}
           isLoading={isTranslating}
-          onClose={closePopup}
+          onClose={handleClose}
           onSave={handleSave}
           containerRef={containerRef}
         />

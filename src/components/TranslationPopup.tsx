@@ -23,15 +23,12 @@ export function TranslationPopup({
   const containerWidth = containerRect?.width ?? 800;
   const scrollTop = containerRef.current?.scrollTop ?? 0;
 
-  const POPUP_HEIGHT = 280;
-  const POPUP_WIDTH = 340;
-  const MARGIN = 12;
+  const POPUP_HEIGHT = 420;
+  const POPUP_WIDTH = 500;
+  const MARGIN = 16;
 
-  // selection.y is in document-space (viewport-relative + scrollTop)
-  // viewportY is the viewport-relative y at the current scroll position
   const viewportRelY = selection.y - scrollTop;
 
-  // Position above selection by default; fall back to below if near visible top
   let top = selection.y - POPUP_HEIGHT - MARGIN;
   if (viewportRelY < POPUP_HEIGHT + MARGIN) {
     top = selection.y + 30;
@@ -43,56 +40,74 @@ export function TranslationPopup({
 
   return (
     <div
-      className="translation-popup absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
-      style={{ top, left, width: POPUP_WIDTH }}
+      className="translation-popup absolute z-50 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      style={{ top, left, width: POPUP_WIDTH, maxHeight: POPUP_HEIGHT }}
       onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
-        <span className="text-xs font-medium text-gray-600">
-          選択したテキスト（ページ{selection.pageNumber}）
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex-shrink-0">
+        <span className="text-xs font-semibold text-gray-500 tracking-wide uppercase">
+          ページ {selection.pageNumber}
         </span>
-        <button onClick={onClose} className="p-0.5 rounded hover:bg-gray-200">
-          <X size={14} />
+        <button
+          onClick={onClose}
+          className="p-1 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <X size={15} />
         </button>
       </div>
 
-      {/* Selected text */}
-      <div className="px-3 py-2 border-b border-gray-100">
-        <p className="text-xs text-gray-700 line-clamp-2">{selection.text}</p>
+      {/* Original text */}
+      <div className="px-4 py-3 border-b border-gray-100 bg-amber-50 flex-shrink-0">
+        <p className="text-xs font-medium text-amber-700 mb-1">選択テキスト</p>
+        <p className="text-sm text-gray-700 leading-relaxed line-clamp-3 italic">{selection.text}</p>
       </div>
 
       {/* Content */}
-      <div className="px-3 py-2 max-h-52 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {isLoading ? (
-          <div className="flex items-center justify-center py-6 gap-2 text-gray-400">
-            <Loader2 size={18} className="animate-spin" />
-            <span className="text-sm">翻訳中...</span>
+          <div className="flex flex-col items-center justify-center py-10 gap-3 text-gray-400">
+            <Loader2 size={22} className="animate-spin text-blue-400" />
+            <span className="text-sm">解析中...</span>
           </div>
         ) : result ? (
-          <>
-            <div className="mb-3">
-              <p className="text-xs font-semibold text-gray-500 mb-1">日本語訳</p>
-              <p className="text-sm text-gray-800">{result.translation}</p>
+          <div className="divide-y divide-gray-100">
+            {/* Translation */}
+            <div className="px-4 py-4">
+              <p className="text-xs font-bold text-blue-600 mb-2 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500" />
+                日本語訳
+              </p>
+              <p className="text-base text-gray-900 leading-relaxed">{result.translation}</p>
             </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-1">用語解説</p>
-              <p className="text-sm text-gray-700 whitespace-pre-line">{result.explanation}</p>
+
+            {/* Explanation */}
+            <div className="px-4 py-4">
+              <p className="text-xs font-bold text-emerald-600 mb-2 flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                解説
+              </p>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                {result.explanation}
+              </p>
             </div>
-          </>
+          </div>
         ) : (
-          <p className="text-xs text-gray-400 py-4 text-center">APIキーを設定してください</p>
+          <div className="flex items-center justify-center py-10 text-sm text-gray-400">
+            APIキーを設定してください
+          </div>
         )}
       </div>
 
       {/* Footer */}
       {result && !isLoading && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 flex justify-end">
+        <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-200 flex justify-end flex-shrink-0">
           <button
             onClick={onSave}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="flex items-center gap-2 text-sm px-4 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
           >
-            <BookmarkPlus size={13} />
+            <BookmarkPlus size={14} />
             単語帳に保存
           </button>
         </div>

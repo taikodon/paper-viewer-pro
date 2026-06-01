@@ -6,19 +6,25 @@ const FALLBACK_API_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 function buildPrompt(text: string): string {
-  return `あなたは学術論文の翻訳と専門用語解説の専門家です。以下の英文はPDFから抽出したテキストです。
-PDF特有の不要な改行コード（\\n）を無視して元の文章を正確に復元した上で、以下の2点を日本語で回答してください。
+  return `あなたは学術論文（英語）の読解を助ける専門家です。
+以下は英語論文から抽出した一節です。PDF由来の余分な改行（\\n）は無視し、文章を正確に復元してください。
 
 英文:
 "${text}"
 
-回答形式（必ずこのJSON形式で返してください）:
-{
-  "translation": "日本語訳をここに記載",
-  "explanation": "専門用語の解説をここに記載（箇条書き可）"
-}
+以下の2点を日本語で回答してください。
 
-注意: JSONのみを返し、余分なマークダウンや説明文は不要です。`;
+1. 【日本語訳】自然で正確な日本語訳
+2. 【解説】この文章が論文の文脈で何を述べているかを、平易な日本語で2〜4文で解説してください。
+   - 何について主張・説明しているか
+   - 専門的な概念・手法が含まれる場合はその意味と役割
+   - 論文を読む上で押さえておくべきポイント
+
+JSONのみを返してください（マークダウン・コードブロック不要）:
+{
+  "translation": "日本語訳",
+  "explanation": "解説（2〜4文）"
+}`;
 }
 
 async function callApi(url: string, apiKey: string, text: string): Promise<TranslationResult> {
