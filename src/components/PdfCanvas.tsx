@@ -1,24 +1,20 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { TranslationPopup } from './TranslationPopup';
 import { useApp } from '../contexts/AppContext';
-import { useTextSelection } from '../hooks/useTextSelection';
 import { geminiService } from '../services/gemini';
 import { dbService } from '../services/db';
 import type { SelectionInfo } from '../types';
 
 interface PdfCanvasProps {
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  textLayerRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  pagesRef: React.RefObject<HTMLDivElement | null>;
   isLoading: boolean;
   hasFile: boolean;
-  currentPage: number;
-  totalPages: number;
   zoom: number;
-  goToPage: (page: number) => void;
   changeZoom: (zoom: number) => void;
 }
 
-export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, currentPage, totalPages, zoom, goToPage, changeZoom }: PdfCanvasProps) {
+export function PdfCanvas({ containerRef, pagesRef, isLoading, hasFile, zoom, changeZoom }: PdfCanvasProps) {
   const {
     currentPaper,
     selection, setSelection,
@@ -29,9 +25,7 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
     addHighlight,
   } = useApp();
 
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Native (non-passive) listener so preventDefault() works for Ctrl+wheel
+  // Native non-passive listener so preventDefault() works for Ctrl+wheel zoom
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -40,7 +34,7 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-  }, []);
+  }, [containerRef]);
 
   const zoomRef = useRef(zoom);
   zoomRef.current = zoom;
@@ -51,42 +45,52 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
     (e: React.WheelEvent<HTMLDivElement>) => {
       if (e.ctrlKey) {
         changeZoomRef.current(zoomRef.current + (e.deltaY > 0 ? -0.1 : 0.1));
-        return;
-      }
-      const el = containerRef.current;
-      if (!el) return;
-      const scrollable = el.scrollHeight > el.clientHeight + 4;
-      const atBottom = !scrollable || el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
-      const atTop = !scrollable || el.scrollTop <= 4;
-      if (e.deltaY > 0 && atBottom && currentPage < totalPages) {
-        el.scrollTop = 0;
-        goToPage(currentPage + 1);
-      } else if (e.deltaY < 0 && atTop && currentPage > 1) {
-        goToPage(currentPage - 1);
       }
     },
-    [currentPage, totalPages, goToPage]
+    []
   );
 
-  const handleSelect = useCallback(
-    async (info: SelectionInfo) => {
+  const handleMouseUp = useCallback(() => {
+    setTimeout(() => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) return;
+      const text = sel.toString().trim();
+      if (!text || text.length < 3) return;
+
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const container = containerRef.current;
+      if (!container) return;
+      const containerRect = container.getBoundingClientRect();
+
+      // Detect which page the selection is on via DOM traversal
+      let pageNumber = 1;
+      let node: Node | null = range.startContainer;
+      while (node) {
+        if (node instanceof HTMLElement && node.dataset.pageNumber) {
+          pageNumber = parseInt(node.dataset.pageNumber);
+          break;
+        }
+        node = node.parentNode;
+      }
+
+      // Document-space coordinates: viewport-relative + scrollTop so popup follows text on scroll
+      const scrollTop = container.scrollTop;
+      const x = rect.left - containerRect.left + rect.width / 2;
+      const y = rect.top - containerRect.top + scrollTop;
+
+      const info: SelectionInfo = { text, x, y, pageNumber };
       setSelection(info);
       setTranslationResult(null);
       if (!apiKey) return;
       setIsTranslating(true);
-      try {
-        const result = await geminiService.translate(info.text, apiKey);
-        setTranslationResult(result);
-      } catch (e) {
-        console.error('Translation error:', e);
-      } finally {
-        setIsTranslating(false);
-      }
-    },
-    [apiKey, setSelection, setTranslationResult, setIsTranslating]
-  );
-
-  const { handleMouseUp } = useTextSelection(handleSelect, currentPage, containerRef);
+      geminiService
+        .translate(info.text, apiKey)
+        .then((result) => setTranslationResult(result))
+        .catch((e) => console.error('Translation error:', e))
+        .finally(() => setIsTranslating(false));
+    }, 100);
+  }, [apiKey, containerRef, setSelection, setTranslationResult, setIsTranslating]);
 
   const handleSave = useCallback(async () => {
     if (!selection || !translationResult || !currentPaper) return;
@@ -114,7 +118,7 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
   return (
     <div
       ref={containerRef}
-      className="relative flex-1 overflow-auto bg-gray-400 flex flex-col items-center py-6 pb-8"
+      className="relative flex-1 overflow-auto bg-gray-400 flex flex-col items-center"
       onMouseUp={handleMouseUp}
       onClick={handleContainerClick}
       onWheel={handleWheel}
@@ -132,26 +136,18 @@ export function PdfCanvas({ canvasRef, textLayerRef, isLoading, hasFile, current
         </div>
       )}
 
-      {hasFile && (
-        <div className="relative shadow-2xl">
-          <canvas ref={canvasRef} className="block" style={{ pointerEvents: 'none' }} />
-          <div
-            ref={textLayerRef}
-            className="absolute top-0 left-0 textLayer"
-          />
-          {selection && (
-            <div className="translation-popup">
-              <TranslationPopup
-                selection={selection}
-                result={translationResult}
-                isLoading={isTranslating}
-                onClose={closePopup}
-                onSave={handleSave}
-                containerRef={containerRef}
-              />
-            </div>
-          )}
-        </div>
+      {/* Pages are injected here by usePdfViewer */}
+      <div ref={pagesRef} className="flex flex-col items-center w-full py-6 pb-8 gap-3" />
+
+      {selection && hasFile && (
+        <TranslationPopup
+          selection={selection}
+          result={translationResult}
+          isLoading={isTranslating}
+          onClose={closePopup}
+          onSave={handleSave}
+          containerRef={containerRef}
+        />
       )}
     </div>
   );

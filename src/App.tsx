@@ -31,8 +31,8 @@ function PdfApp() {
   const [initialZoom, setInitialZoom] = useState(1.25);
 
   const {
-    canvasRef,
-    textLayerRef,
+    containerRef,
+    pagesRef,
     pdfDoc,
     currentPage: viewerPage,
     totalPages,
@@ -181,14 +181,11 @@ function PdfApp() {
             onFitToWidth={fitToWidth}
           />
           <PdfCanvas
-            canvasRef={canvasRef}
-            textLayerRef={textLayerRef}
+            containerRef={containerRef}
+            pagesRef={pagesRef}
             isLoading={isLoading}
             hasFile={!!fileData}
-            currentPage={viewerPage}
-            totalPages={totalPages}
             zoom={zoom}
-            goToPage={goToPage}
             changeZoom={changeZoom}
           />
         </div>

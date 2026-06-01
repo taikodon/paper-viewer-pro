@@ -20,26 +20,32 @@ export function TranslationPopup({
   containerRef,
 }: TranslationPopupProps) {
   const containerRect = containerRef.current?.getBoundingClientRect();
-  const containerHeight = containerRect?.height ?? 600;
+  const containerWidth = containerRect?.width ?? 800;
+  const scrollTop = containerRef.current?.scrollTop ?? 0;
 
   const POPUP_HEIGHT = 280;
   const POPUP_WIDTH = 340;
   const MARGIN = 12;
 
+  // selection.y is in document-space (viewport-relative + scrollTop)
+  // viewportY is the viewport-relative y at the current scroll position
+  const viewportRelY = selection.y - scrollTop;
+
+  // Position above selection by default; fall back to below if near visible top
   let top = selection.y - POPUP_HEIGHT - MARGIN;
-  if (top < 0) top = selection.y + 30;
-  if (top + POPUP_HEIGHT > containerHeight) top = containerHeight - POPUP_HEIGHT - MARGIN;
+  if (viewportRelY < POPUP_HEIGHT + MARGIN) {
+    top = selection.y + 30;
+  }
 
   let left = selection.x - POPUP_WIDTH / 2;
-  const containerWidth = containerRect?.width ?? 800;
   if (left < MARGIN) left = MARGIN;
   if (left + POPUP_WIDTH > containerWidth - MARGIN) left = containerWidth - POPUP_WIDTH - MARGIN;
 
   return (
     <div
-      className="absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
+      className="translation-popup absolute z-50 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
       style={{ top, left, width: POPUP_WIDTH }}
-      onMouseDown={e => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
@@ -75,9 +81,7 @@ export function TranslationPopup({
             </div>
           </>
         ) : (
-          <p className="text-xs text-gray-400 py-4 text-center">
-            APIキーを設定してください
-          </p>
+          <p className="text-xs text-gray-400 py-4 text-center">APIキーを設定してください</p>
         )}
       </div>
 
